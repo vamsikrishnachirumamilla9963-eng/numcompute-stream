@@ -60,3 +60,36 @@ def load_csv(
     if data.size == 0:
         raise ValueError(f"File '{filepath}' contains no data rows.")
     return data
+
+def save_csv(
+    array: np.ndarray,
+    filepath: str,
+    delimiter: str = ",",
+    header: Optional[str] = None,
+    fmt: str = "%.8g",
+) -> None:
+    """Save a 2-D NumPy array to a CSV file.
+
+    Parameters
+    ----------
+    array     : np.ndarray, shape (n_rows, n_cols)
+    filepath  : str
+    delimiter : str, default ','
+    header    : str or None
+    fmt       : str, default '%.8g'
+
+    Raises
+    ------
+    ValueError
+        If array is not 1-D or 2-D.
+
+    Complexity
+    ----------
+    Time : O(n_rows x n_cols)
+    Space: O(1)
+    """
+    if array.ndim not in (1, 2):
+        raise ValueError(f"array must be 1-D or 2-D, got shape {array.shape}.")
+    np.savetxt(filepath, array, delimiter=delimiter,
+               header=header or "", fmt=fmt, comments="")
+    

@@ -28,4 +28,16 @@ class TestLoadCSV:
         with pytest.raises(ValueError):
             nc_io.load_csv(fname, skip_header=True)
         os.unlink(fname)
-        
+
+    def test_save_and_reload(self):
+        X = np.array([[1.0, 2.0], [3.0, 4.0]])
+        with tempfile.NamedTemporaryFile(suffix='.csv', delete=False) as f:
+            fname = f.name
+        nc_io.save_csv(X, fname, header='a,b')
+        loaded = nc_io.load_csv(fname, skip_header=True)
+        os.unlink(fname)
+        assert np.allclose(loaded, X)
+
+    def test_save_invalid_shape_raises(self):
+        with pytest.raises(ValueError):
+            nc_io.save_csv(np.ones((2, 2, 2)), "/tmp/bad.csv")
