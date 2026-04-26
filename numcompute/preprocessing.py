@@ -145,3 +145,63 @@ class MinMaxScaler(_BaseTransformer):
         X = self._validate(X, fitted=True)
         return (X - self.min_) / self.scale_
     
+class SimpleImputer(_BaseTransformer):
+    """Replace NaN values with a per-column statistic.
+
+    Parameters
+    ----------
+    strategy   : {'mean', 'median', 'constant'}
+    fill_value : float, default 0.0  (used only when strategy='constant')
+
+    Attributes
+    ----------
+    statistics_ : np.ndarray, shape (n_features,)
+    """
+
+    def __init__(self, strategy: str = "mean", fill_value: float = 0.0) -> None:
+        if strategy not in ("mean", "median", "constant"):
+            raise ValueError(
+                f"strategy must be 'mean', 'median', or 'constant'; got '{strategy}'."
+            )
+        self.strategy   = strategy
+        self.fill_value = fill_value
+
+    def fit(self, X: np.ndarray, y=None) -> "SimpleImputer":
+        """Compute per-feature fill statistics.
+
+        Parameters
+        ----------
+        X : np.ndarray, shape (n_samples, n_features)
+
+        Returns
+        -------
+        self
+        """
+        X = self._validate(X)
+        with np.errstate(all="ignore"):   # suppress all-NaN column warning
+            if self.strategy == "mean":
+                self.statistics_ = np.nanmean(X, axis=0)
+            elif self.strategy == "median":
+                self.statistics_ = np.nanmedian(X, axis=0)
+            else:
+                self.statistics_ = np.full(X.shape[1], self.fill_value)
+        self._fitted = True
+        return self
+
+    def transform(self, X: np.ndarray) -> np.ndarray:
+        """Replace NaN values with fitted statistics.
+
+        Parameters
+        ----------
+        X : np.ndarray, shape (n_samples, n_features)
+
+        Returns
+        -------
+        np.ndarray, shape (n_samples, n_features) — copy with NaNs replaced.
+
+        """
+        X = self._validate(X, fitted=True).copy()
+        nan_mask = np.isnan(X)
+        X[nan_mask] = np.take(self.statistics_, np.where(nan_mask)[1])
+        return X
+    

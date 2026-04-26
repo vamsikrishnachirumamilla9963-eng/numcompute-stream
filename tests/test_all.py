@@ -109,3 +109,26 @@ class TestMinMaxScaler:
         with pytest.raises(ValueError):
             MinMaxScaler(feature_range=(5, 1))
 
+from numcompute.preprocessing import SimpleImputer
+
+class TestSimpleImputer:
+    def test_mean_imputation(self):
+        X = np.array([[1., np.nan], [3., 4.]])
+        Xt = SimpleImputer(strategy="mean").fit_transform(X)
+        assert np.isclose(Xt[0, 1], 4.0)
+
+    def test_constant_imputation(self):
+        X = np.array([[np.nan, 2.], [3., np.nan]])
+        Xt = SimpleImputer(strategy="constant", fill_value=-999).fit_transform(X)
+        assert np.isclose(Xt[0, 0], -999.) and np.isclose(Xt[1, 1], -999.)
+
+    def test_median_imputation(self):
+        X = np.array([[1.], [3.], [np.nan], [5.]])
+        Xt = SimpleImputer(strategy="median").fit_transform(X)
+        assert np.isclose(Xt[2, 0], np.median([1, 3, 5]))
+
+    def test_all_nan_column_stays_nan(self):
+        X = np.array([[np.nan], [np.nan]])
+        Xt = SimpleImputer(strategy="mean").fit_transform(X)
+        assert np.all(np.isnan(Xt))
+
