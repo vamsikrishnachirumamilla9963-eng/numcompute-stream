@@ -41,3 +41,20 @@ class TestLoadCSV:
     def test_save_invalid_shape_raises(self):
         with pytest.raises(ValueError):
             nc_io.save_csv(np.ones((2, 2, 2)), "/tmp/bad.csv")
+    
+class TestLoadCSVChunks:
+    def test_chunks_cover_all_rows(self):
+        rows = '\n'.join(f'{i},{i*2}' for i in range(25))
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+            f.write('a,b\n' + rows + '\n'); fname = f.name
+        chunks = list(nc_io.load_csv_chunks(fname, chunk_size=10))
+        os.unlink(fname)
+        assert sum(len(c) for c in chunks) == 25
+        assert len(chunks) == 3
+
+    def test_tab_delimiter(self):
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.tsv', delete=False) as f:
+            f.write('1\t2\t3\n4\t5\t6\n'); fname = f.name
+        data = nc_io.load_csv(fname, delimiter='\t', skip_header=False)
+        os.unlink(fname)
+        assert data.shape == (2, 3)

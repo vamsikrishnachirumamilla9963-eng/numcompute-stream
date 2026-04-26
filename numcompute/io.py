@@ -93,3 +93,61 @@ def save_csv(
     np.savetxt(filepath, array, delimiter=delimiter,
                header=header or "", fmt=fmt, comments="")
     
+def load_csv_chunks(
+    filepath: str,
+    chunk_size: int = 1000,
+    delimiter: str = ",",
+    skip_header: bool = True,
+    dtype: type = float,
+    fill_value: float = np.nan,
+    encoding: str = "utf-8",
+) -> Iterator[np.ndarray]:
+    """Yield successive chunk_size-row chunks from a CSV file.
+
+    Parameters
+    ----------
+    filepath   : str
+    chunk_size : int, default 1000
+    delimiter  : str, default ','
+    skip_header: bool, default True
+    dtype      : type, default float
+    fill_value : float, default np.nan
+    encoding   : str, default 'utf-8'
+
+    Yields
+    ------
+    np.ndarray, shape (<=chunk_size, n_cols)
+    """
+    with open(filepath, "r", encoding=encoding) as fh:
+        if skip_header:
+            next(fh)
+        buffer: list[str] = []
+        for line in fh:
+            buffer.append(line)
+            if len(buffer) >= chunk_size:
+                yield _parse_lines(buffer, delimiter, dtype, fill_value)
+                buffer = []
+        if buffer:
+            yield _parse_lines(buffer, delimiter, dtype, fill_value)
+
+
+def _parse_lines(
+    lines: list[str],
+    delimiter: str,
+    dtype: type,
+    fill_value: float,
+) -> np.ndarray:
+    """Parse a list of raw CSV text lines into a 2-D array."""
+    import io as _io
+    text = "".join(lines)
+    arr = np.genfromtxt(
+        _io.StringIO(text),
+        delimiter=delimiter,
+        filling_values=fill_value,
+        dtype=dtype,
+        autostrip=True,
+    )
+    if arr.ndim == 1:
+        arr = arr.reshape(1, -1)
+    return arr
+
