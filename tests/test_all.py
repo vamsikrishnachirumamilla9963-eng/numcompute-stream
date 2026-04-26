@@ -168,3 +168,11 @@ class TestSort:
         ones = idx[sorted_vals == 1.0]
         assert list(ones) == sorted(ones.tolist())
 
+def test_multi_key_sort(self):
+        data = np.array([[2,1],[1,3],[1,2]])
+        out = multi_key_sort(data, keys=[0,1])
+        assert out[0,0]==1 and out[1,0]==1 and out[0,1]==2
+
+    def test_multi_key_invalid_key_raises(self):
+        with pytest.raises(ValueError):
+            multi_key_sort(np.ones((3,2)), keys=[5])
