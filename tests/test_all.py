@@ -86,3 +86,26 @@ class TestStandardScaler:
     def test_not_fitted_raises(self):
         with pytest.raises(RuntimeError):
             StandardScaler().transform(np.array([[1., 2.]]))
+
+from numcompute.preprocessing import MinMaxScaler
+
+class TestMinMaxScaler:
+    def test_range_01(self):
+        X = np.array([[0.], [5.], [10.]])
+        Xt = MinMaxScaler().fit_transform(X)
+        assert np.isclose(Xt.min(), 0.) and np.isclose(Xt.max(), 1.)
+
+    def test_custom_range(self):
+        X = np.array([[0.], [10.]])
+        Xt = MinMaxScaler(feature_range=(-1, 1)).fit_transform(X)
+        assert np.isclose(Xt[0, 0], -1.) and np.isclose(Xt[1, 0], 1.)
+
+    def test_constant_feature(self):
+        X = np.array([[3., 1.], [3., 2.]])
+        Xt = MinMaxScaler().fit_transform(X)
+        assert np.allclose(Xt[:, 0], 0.)
+
+    def test_invalid_range_raises(self):
+        with pytest.raises(ValueError):
+            MinMaxScaler(feature_range=(5, 1))
+

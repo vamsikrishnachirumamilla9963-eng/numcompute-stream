@@ -85,3 +85,63 @@ class StandardScaler(_BaseTransformer):
         """Reverse the standardisation."""
         X = self._validate(X, fitted=True)
         return X * self.scale_ + self.mean_
+    
+class MinMaxScaler(_BaseTransformer):
+    """The function helps with maintaining the range for the array [feature_range[0], feature_range[1]].
+
+    Attributes
+    ----------
+    data_min_ : np.ndarray
+    data_max_ : np.ndarray
+    scale_    : np.ndarray
+    min_      : np.ndarray
+    """
+
+    def __init__(self, feature_range: tuple = (0.0, 1.0)) -> None:
+        lo, hi = feature_range
+        if lo >= hi:
+            raise ValueError(f"feature_range must satisfy lo < hi, got {feature_range}.")
+        self.feature_range = feature_range
+
+    def fit(self, X: np.ndarray, y=None) -> "MinMaxScaler":
+        """Compute per-feature min and max.
+
+        Parameters
+        ----------
+        X : np.ndarray, shape (n_samples, n_features)
+
+        Returns
+        -------
+        self
+        """
+        X = self._validate(X)
+        self.data_min_ = np.nanmin(X, axis=0)
+        self.data_max_ = np.nanmax(X, axis=0)
+        data_range = self.data_max_ - self.data_min_
+        data_range  = np.where(data_range == 0, 1.0, data_range)
+        lo, hi = self.feature_range
+        self.scale_ = (hi - lo) / data_range
+        self.min_   = lo - self.data_min_ * self.scale_
+        self._fitted = True
+        return self
+
+    def transform(self, X: np.ndarray) -> np.ndarray:
+        """Scale X to the fitted range.
+
+        Parameters
+        ----------
+        X : np.ndarray, shape (n_samples, n_features)
+
+        Returns
+        -------
+        np.ndarray, shape (n_samples, n_features)
+
+        """
+        X = self._validate(X, fitted=True)
+        return X * self.scale_ + self.min_
+
+    def inverse_transform(self, X: np.ndarray) -> np.ndarray:
+        """Reverse the min-max scaling."""
+        X = self._validate(X, fitted=True)
+        return (X - self.min_) / self.scale_
+    
