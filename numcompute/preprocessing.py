@@ -205,3 +205,59 @@ class SimpleImputer(_BaseTransformer):
         X[nan_mask] = np.take(self.statistics_, np.where(nan_mask)[1])
         return X
     
+class OneHotEncoder(_BaseTransformer):
+    """Encode integer categorical features as one-hot binary columns.
+
+    Attributes
+    ----------
+    categories_ : list of np.ndarray
+        Sorted unique categories per input feature column.
+    """
+
+    def fit(self, X: np.ndarray, y=None) -> "OneHotEncoder":
+        """Learn categories for each feature column.
+
+        Parameters
+        ----------
+        X : np.ndarray, shape (n_samples, n_features)
+
+        Returns
+        -------
+        self
+
+        """
+        X = self._validate(X)
+        self.categories_ = [
+            np.unique(X[:, j][~np.isnan(X[:, j])])
+            for j in range(X.shape[1])
+        ]
+        self._fitted = True
+        return self
+
+    def transform(self, X: np.ndarray) -> np.ndarray:
+        """One-hot encode X.
+
+        Parameters
+        ----------
+        X : np.ndarray, shape (n_samples, n_features)
+
+        Returns
+        -------
+        np.ndarray, shape (n_samples, sum(len(cats)))
+            Unknown categories produce an all-zero row segment.
+
+        """
+        X = self._validate(X, fitted=True)
+        parts = []
+        for j, cats in enumerate(self.categories_):
+            col = X[:, j:j+1]
+            parts.append((col == cats[np.newaxis, :]).astype(float))
+        return np.hstack(parts)
+
+    def get_feature_names_out(self) -> list:
+        """Return output feature names as list of strings."""
+        names = []
+        for j, cats in enumerate(self.categories_):
+            names.extend([f"x{j}_{c}" for c in cats])
+        return names
+    

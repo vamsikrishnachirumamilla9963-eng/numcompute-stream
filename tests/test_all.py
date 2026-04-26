@@ -132,3 +132,22 @@ class TestSimpleImputer:
         Xt = SimpleImputer(strategy="mean").fit_transform(X)
         assert np.all(np.isnan(Xt))
 
+from numcompute.preprocessing import OneHotEncoder
+
+class TestOneHotEncoder:
+    def test_basic_encoding(self):
+        X = np.array([[0.], [1.], [2.], [0.]])
+        Xt = OneHotEncoder().fit_transform(X)
+        assert Xt.shape == (4, 3)
+        assert np.allclose(Xt.sum(axis=1), 1)
+
+    def test_multi_column(self):
+        X = np.array([[0., 1.], [1., 0.]])
+        Xt = OneHotEncoder().fit_transform(X)
+        assert Xt.shape == (2, 4)
+
+    def test_unknown_category_all_zeros(self):
+        ohe = OneHotEncoder().fit(np.array([[0.], [1.], [2.]]))
+        Xt = ohe.transform(np.array([[99.]]))
+        assert np.all(Xt == 0)
+
