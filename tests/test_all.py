@@ -168,6 +168,8 @@ class TestSort:
         ones = idx[sorted_vals == 1.0]
         assert list(ones) == sorted(ones.tolist())
 
+
+from numcompute.sort_search import stable_sort, argsort_stable, multi_key_sort
 def test_multi_key_sort(self):
         data = np.array([[2,1],[1,3],[1,2]])
         out = multi_key_sort(data, keys=[0,1])
