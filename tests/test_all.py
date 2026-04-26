@@ -151,3 +151,20 @@ class TestOneHotEncoder:
         Xt = ohe.transform(np.array([[99.]]))
         assert np.all(Xt == 0)
 
+from numcompute.sort_search import stable_sort, argsort_stable
+
+class TestSort:
+    def test_stable_sort_ascending(self):
+        assert np.array_equal(stable_sort(np.array([3,1,2])), [1,2,3])
+
+    def test_stable_sort_descending(self):
+        assert np.array_equal(stable_sort(np.array([3,1,2]), descending=True), [3,2,1])
+
+    def test_argsort_stable_preserves_tie_order(self):
+        arr = np.array([3., 1., 2., 1., 3.])
+        idx = argsort_stable(arr)
+        sorted_vals = arr[idx]
+        assert np.all(sorted_vals[:-1] <= sorted_vals[1:])
+        ones = idx[sorted_vals == 1.0]
+        assert list(ones) == sorted(ones.tolist())
+
