@@ -58,3 +58,31 @@ class TestLoadCSVChunks:
         data = nc_io.load_csv(fname, delimiter='\t', skip_header=False)
         os.unlink(fname)
         assert data.shape == (2, 3)
+
+from numcompute.preprocessing import StandardScaler
+
+class TestStandardScaler:
+    def test_zero_mean_unit_std(self):
+        X = np.array([[1., 2.], [3., 4.], [5., 6.]])
+        Xt = StandardScaler().fit_transform(X)
+        assert np.allclose(Xt.mean(axis=0), 0, atol=1e-10)
+        assert np.allclose(Xt.std(axis=0),  1, atol=1e-10)
+
+    def test_zero_variance_feature(self):
+        X = np.array([[1., 5.], [1., 6.], [1., 7.]])
+        Xt = StandardScaler().fit_transform(X)
+        assert np.allclose(Xt[:, 0], 0)
+
+    def test_inverse_transform(self):
+        X = np.array([[1., 2.], [3., 4.]])
+        sc = StandardScaler().fit(X)
+        assert np.allclose(sc.inverse_transform(sc.transform(X)), X, atol=1e-10)
+
+    def test_nan_preserved(self):
+        X = np.array([[1., np.nan], [3., 4.], [5., 6.]])
+        Xt = StandardScaler().fit_transform(X)
+        assert np.isnan(Xt[0, 1])
+
+    def test_not_fitted_raises(self):
+        with pytest.raises(RuntimeError):
+            StandardScaler().transform(np.array([[1., 2.]]))
