@@ -41,10 +41,6 @@ def load_csv(
     ValueError
         If the file is empty after skipping the header.
 
-    Complexity
-    ----------
-    Time : O(n_rows x n_cols)
-    Space: O(n_rows x n_cols)
     """
     data = np.genfromtxt(
         filepath,
@@ -83,10 +79,6 @@ def save_csv(
     ValueError
         If array is not 1-D or 2-D.
 
-    Complexity
-    ----------
-    Time : O(n_rows x n_cols)
-    Space: O(1)
     """
     if array.ndim not in (1, 2):
         raise ValueError(f"array must be 1-D or 2-D, got shape {array.shape}.")
