@@ -58,3 +58,41 @@ def argsort_stable(
     return idx
 
 
+def multi_key_sort(
+    data: np.ndarray,
+    keys: list,
+    descending: Optional[list] = None,
+) -> np.ndarray:
+    """Sort rows of a 2-D array by multiple column keys.
+
+    Parameters
+    ----------
+    data       : np.ndarray, shape (n_rows, n_cols)
+    keys       : list of int — column indices in priority order
+    descending : list of bool or None — per-key direction
+
+    Returns
+    -------
+    np.ndarray, shape (n_rows, n_cols) — row-sorted copy
+
+    Raises
+    ------
+    ValueError
+        If data is not 2-D or any key index is out of range.
+
+    """
+    if data.ndim != 2:
+        raise ValueError(f"data must be 2-D, got shape {data.shape}.")
+    n_cols = data.shape[1]
+    for k in keys:
+        if not (0 <= k < n_cols):
+            raise ValueError(f"Key {k} out of range for {n_cols} columns.")
+    if descending is None:
+        descending = [False] * len(keys)
+    if len(descending) != len(keys):
+        raise ValueError("len(descending) must equal len(keys).")
+    sort_cols = [(-data[:, k] if desc else data[:, k])
+                 for k, desc in zip(keys, descending)]
+    idx = np.lexsort(sort_cols[::-1])
+    return data[idx]
+
