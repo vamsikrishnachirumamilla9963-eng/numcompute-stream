@@ -58,3 +58,51 @@ def median(X: np.ndarray, axis: Optional[int] = None) -> Union[float, np.ndarray
     """NaN-safe median."""
     return np.nanmedian(np.asarray(X, dtype=float), axis=axis)
 
+def quantiles(
+    X: np.ndarray,
+    q: Union[float, list, np.ndarray],
+    axis: Optional[int] = None,
+) -> Union[float, np.ndarray]:
+    """Compute quantile(s) with NaN handling.
+
+    Parameters
+    ----------
+    X    : np.ndarray
+    q    : float or array-like — quantile(s) in [0, 1]
+    axis : int or None
+
+    Raises
+    ------
+    ValueError — if any q value is outside [0, 1]
+    """
+    q_arr = np.asarray(q, dtype=float)
+    if np.any((q_arr < 0) | (q_arr > 1)):
+        raise ValueError("All q values must be in [0, 1].")
+    return np.nanpercentile(np.asarray(X, dtype=float), q_arr * 100, axis=axis)
+
+
+def histogram(
+    X: np.ndarray,
+    bins: Union[int, np.ndarray] = 10,
+    range: Optional[Tuple[float, float]] = None,
+    density: bool = False,
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Compute histogram, ignoring NaN values.
+
+    Parameters
+    ----------
+    X       : np.ndarray — flattened before binning
+    bins    : int or np.ndarray, default 10
+    range   : (float, float) or None
+    density : bool, default False
+
+    Returns
+    -------
+    counts    : np.ndarray, shape (n_bins,)
+    bin_edges : np.ndarray, shape (n_bins + 1,)
+
+    """
+    X     = np.asarray(X, dtype=float).ravel()
+    clean = X[~np.isnan(X)]
+    return np.histogram(clean, bins=bins, range=range, density=density)
+

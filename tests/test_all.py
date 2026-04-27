@@ -308,5 +308,28 @@ class TestDescribe:
         d = describe(X)
         assert np.isclose(d["mean"], X.mean()) and np.isclose(d["std"], X.std())
 
+from numcompute.stats import quantiles, histogram
+
+class TestHistogram:
+    def test_counts_sum_to_n(self):
+        counts, _ = histogram(np.random.default_rng(0).standard_normal(1000), bins=20)
+        assert counts.sum() == 1000
+
+    def test_nan_ignored(self):
+        counts, _ = histogram(np.array([1.,2.,np.nan,3.]), bins=3)
+        assert counts.sum() == 3
+
+    def test_nan_only_empty(self):
+        counts, _ = histogram(np.array([np.nan, np.nan]), bins=5)
+        assert counts.sum() == 0
+
+class TestQuantiles:
+    def test_median_via_quantile(self):
+        assert np.isclose(quantiles(np.array([1.,2.,3.,4.,5.]), 0.5), 3.)
+
+    def test_out_of_range_raises(self):
+        with pytest.raises(ValueError):
+            quantiles(np.array([1.,2.]), 1.5)
+
 
 
