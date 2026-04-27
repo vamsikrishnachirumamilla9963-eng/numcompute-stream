@@ -252,4 +252,18 @@ class TestRank:
 
     def test_nan_gets_nan_rank(self):
         assert np.isnan(rank(np.array([1.,np.nan,3.]))[1])
+    
+    def test_descending(self):
+        r = rank(np.array([1.,2.,3.]), ascending=False)
+        assert r[2]==1. and r[0]==3.
+
+    def test_empty_array(self):
+        assert len(rank(np.array([]))) == 0
+
+    def test_min_max_methods(self):
+        r_min = rank(np.array([5.,5.,5.,9.]), method="min")
+        r_max = rank(np.array([5.,5.,5.,9.]), method="max")
+        assert np.allclose(r_min[:3], 1.) and np.allclose(r_max[:3], 3.)
+
+
 
