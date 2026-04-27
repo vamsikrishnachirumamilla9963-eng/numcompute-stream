@@ -106,3 +106,71 @@ def histogram(
     clean = X[~np.isnan(X)]
     return np.histogram(clean, bins=bins, range=range, density=density)
 
+class WelfordStats:
+    """Incremental mean and variance via Chan's parallel Welford algorithm.
+
+    Parameters
+    ----------
+    n_features : int, default 1
+
+    Attributes
+    ----------
+    n_    : int
+    mean_ : np.ndarray, shape (n_features,)
+    M2_   : np.ndarray, shape (n_features,)
+    """
+
+    def __init__(self, n_features: int = 1) -> None:
+        self.n_features = n_features
+        self.n_:    int        = 0
+        self.mean_: np.ndarray = np.zeros(n_features, dtype=float)
+        self.M2_:   np.ndarray = np.zeros(n_features, dtype=float)
+
+    def update(self, x: np.ndarray) -> "WelfordStats":
+        """Incorporate a batch via Chan's parallel formula — no Python row loop.
+
+        Parameters
+        ----------
+        x : np.ndarray, shape (n_features,) or (batch, n_features)
+
+        Returns
+        -------
+        self
+
+        """
+        x = np.atleast_2d(np.asarray(x, dtype=float))
+        b = x.shape[0]
+        if b == 0:
+            return self
+        b_mean = x.mean(axis=0)
+        b_M2   = np.sum((x - b_mean) ** 2, axis=0)
+        n_a    = self.n_
+        n_t    = n_a + b
+        delta  = b_mean - self.mean_
+        self.mean_ = self.mean_ + delta * (b / n_t)
+        self.M2_   = self.M2_ + b_M2 + delta ** 2 * (n_a * b / n_t)
+        self.n_    = n_t
+        return self
+
+    @property
+    def variance(self) -> np.ndarray:
+        """Population variance (ddof=0)."""
+        return self.M2_ / self.n_ if self.n_ >= 1 else np.full(self.n_features, np.nan)
+
+    @property
+    def sample_variance(self) -> np.ndarray:
+        """Sample variance (ddof=1)."""
+        return self.M2_ / (self.n_ - 1) if self.n_ >= 2 else np.full(self.n_features, np.nan)
+
+    @property
+    def std(self) -> np.ndarray:
+        """Population standard deviation."""
+        return np.sqrt(self.variance)
+
+    def reset(self) -> "WelfordStats":
+        """Reset all running statistics."""
+        self.n_    = 0
+        self.mean_ = np.zeros(self.n_features, dtype=float)
+        self.M2_   = np.zeros(self.n_features, dtype=float)
+        return self
+    

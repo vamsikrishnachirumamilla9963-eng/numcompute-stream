@@ -331,5 +331,28 @@ class TestQuantiles:
         with pytest.raises(ValueError):
             quantiles(np.array([1.,2.]), 1.5)
 
+from numcompute.stats import WelfordStats
+
+class TestWelford:
+    def test_batch_matches_numpy(self):
+        data = np.random.default_rng(42).standard_normal((500, 4))
+        w = WelfordStats(4); w.update(data)
+        assert np.allclose(w.mean_,    data.mean(axis=0),  atol=1e-10)
+        assert np.allclose(w.variance, data.var(axis=0),   atol=1e-10)
+
+    def test_sequential_equals_batch(self):
+        data = np.random.default_rng(7).standard_normal((200, 3))
+        w_seq = WelfordStats(3)
+        for row in data:
+            w_seq.update(row.reshape(1,-1))
+        w_bat = WelfordStats(3); w_bat.update(data)
+        assert np.allclose(w_seq.mean_,    w_bat.mean_,    atol=1e-10)
+        assert np.allclose(w_seq.variance, w_bat.variance, atol=1e-10)
+
+    def test_sample_variance_ddof1(self):
+        data = np.array([[2.],[4.],[4.],[4.],[5.],[5.],[7.],[9.]])
+        w = WelfordStats(1); w.update(data)
+        assert np.isclose(w.sample_variance[0], np.var(data.ravel(), ddof=1))
+
 
 
