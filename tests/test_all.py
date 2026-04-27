@@ -236,3 +236,20 @@ class TestBinarySearch:
         idx, found = binary_search(np.array([]), 1.)
         assert not found and idx == 0
 
+from numcompute.rank import rank
+
+class TestRank:
+    def test_average_ties(self):
+        r = rank(np.array([1.,2.,2.,3.]), method="average")
+        assert np.isclose(r[1], 2.5) and np.isclose(r[2], 2.5)
+
+    def test_dense_ties(self):
+        r = rank(np.array([1.,2.,2.,3.]), method="dense")
+        assert r[1]==2 and r[2]==2 and r[3]==3
+
+    def test_ordinal_ties(self):
+        assert list(rank(np.array([2.,2.,2.]), method="ordinal")) == [1.,2.,3.]
+
+    def test_nan_gets_nan_rank(self):
+        assert np.isnan(rank(np.array([1.,np.nan,3.]))[1])
+
