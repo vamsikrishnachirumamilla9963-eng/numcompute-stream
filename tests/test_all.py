@@ -280,5 +280,16 @@ class TestPercentile:
     def test_nan_ignored(self):
         assert np.isclose(percentile(np.array([1.,np.nan,3.]), 50), 2.)
     
-    
+    def test_all_nan_returns_nan(self):
+        assert np.isnan(percentile(np.array([np.nan,np.nan]), 50))
+
+    def test_q_out_of_range_raises(self):
+        with pytest.raises(ValueError):
+            percentile(np.array([1.,2.]), 101)
+
+    def test_multi_q_array(self):
+        ps = percentile(np.array([1.,2.,3.,4.,5.]), [0,50,100])
+        assert isinstance(ps, np.ndarray) and ps[0]==1. and ps[2]==5.
+
+
 
