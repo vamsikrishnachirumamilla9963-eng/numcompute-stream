@@ -291,5 +291,22 @@ class TestPercentile:
         ps = percentile(np.array([1.,2.,3.,4.,5.]), [0,50,100])
         assert isinstance(ps, np.ndarray) and ps[0]==1. and ps[2]==5.
 
+from numcompute.stats import describe, mean, std, median
+
+class TestDescribe:
+    def test_keys_present(self):
+        d = describe(np.array([1.,2.,3.,4.,5.]))
+        for k in ("n","mean","std","var","min","max","median","q25","q75","nan_count"):
+            assert k in d
+
+    def test_nan_count(self):
+        d = describe(np.array([1.,np.nan,3.]))
+        assert d["nan_count"] == 1 and d["n"] == 2
+
+    def test_mean_std_values(self):
+        X = np.array([2.,4.,4.,4.,5.,5.,7.,9.])
+        d = describe(X)
+        assert np.isclose(d["mean"], X.mean()) and np.isclose(d["std"], X.std())
+
 
 
