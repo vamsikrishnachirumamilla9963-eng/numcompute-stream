@@ -170,6 +170,7 @@ class TestSort:
 
 
 from numcompute.sort_search import stable_sort, argsort_stable, multi_key_sort
+
     def test_multi_key_sort(self):
         data = np.array([[2,1],[1,3],[1,2]])
         out = multi_key_sort(data, keys=[0,1])
@@ -178,4 +179,28 @@ from numcompute.sort_search import stable_sort, argsort_stable, multi_key_sort
     def test_multi_key_invalid_key_raises(self):
         with pytest.raises(ValueError):
             multi_key_sort(np.ones((3,2)), keys=[5])
+
+from numcompute.sort_search import topk
+
+class TestTopK:
+    def test_top3_largest(self):
+        vals = np.array([5.,1.,3.,4.,2.])
+        top_vals, _ = topk(vals, 3, largest=True)
+        assert set(top_vals) == {3.,4.,5.}
+
+    def test_top3_smallest(self):
+        top_vals, _ = topk(np.array([5.,1.,3.,4.,2.]), 3, largest=False)
+        assert set(top_vals) == {1.,2.,3.}
+
+    def test_k_exceeds_n_clamped(self):
+        top_vals, _ = topk(np.array([1.,2.]), 10)
+        assert len(top_vals) == 2
+
+    def test_empty_array(self):
+        vals, idx = topk(np.array([]), k=3)
+        assert len(vals) == 0 and len(idx) == 0
+
+    def test_non_1d_raises(self):
+        with pytest.raises(ValueError):
+            topk(np.ones((3,3)), 2)
 

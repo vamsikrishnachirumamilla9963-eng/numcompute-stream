@@ -96,3 +96,47 @@ def multi_key_sort(
     idx = np.lexsort(sort_cols[::-1])
     return data[idx]
 
+def topk(
+    values: np.ndarray,
+    k: int,
+    largest: bool = True,
+    return_indices: bool = True,
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Return the top-k values and their indices via np.argpartition.
+
+    Parameters
+    ----------
+    values         : np.ndarray, shape (n,)
+    k              : int — number of elements; clamped to [1, n]
+    largest        : bool, default True
+    return_indices : bool, default True
+
+    Returns
+    -------
+    top_values  : np.ndarray, shape (k,) — sorted
+    top_indices : np.ndarray of int, shape (k,)  [only if return_indices=True]
+
+    Raises
+    ------
+    ValueError
+        If values is not 1-D.
+
+    """
+    values = np.asarray(values, dtype=float)
+    if values.ndim != 1:
+        raise ValueError(f"values must be 1-D, got shape {values.shape}.")
+    n = len(values)
+    if n == 0:
+        empty = np.array([], dtype=float)
+        return (empty, np.array([], dtype=int)) if return_indices else empty
+    k = int(np.clip(k, 1, n))
+    if largest:
+        part_idx = np.argpartition(values, n - k)[-k:]
+        order    = np.argsort(values[part_idx], kind="stable")[::-1]
+    else:
+        part_idx = np.argpartition(values, k - 1)[:k]
+        order    = np.argsort(values[part_idx], kind="stable")
+    top_indices = part_idx[order]
+    top_values  = values[top_indices]
+    return (top_values, top_indices) if return_indices else top_values
+
