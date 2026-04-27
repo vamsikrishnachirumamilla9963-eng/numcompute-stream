@@ -94,3 +94,54 @@ def _fill_group_stat(
     else:                gs = maxs
     out[:] = gs[group_ids - 1]
 
+def percentile(
+    data: np.ndarray,
+    q: Union[float, np.ndarray],
+    interpolation: str = "linear",
+) -> Union[float, np.ndarray]:
+    """Compute percentile(s) of a 1-D array, ignoring NaN.
+
+    Parameters
+    ----------
+    data          : np.ndarray, shape (n,)
+    q             : float or array-like — percentile(s) in [0, 100]
+    interpolation : {'linear','lower','higher','midpoint','nearest'}
+
+    Returns
+    -------
+    float or np.ndarray
+
+    Raises
+    ------
+    ValueError
+        If data is not 1-D, q is outside [0,100], or interpolation invalid.
+
+    """
+    valid_interp = ("linear","lower","higher","midpoint","nearest")
+    if interpolation not in valid_interp:
+        raise ValueError(f"interpolation must be one of {valid_interp}.")
+    data = np.asarray(data, dtype=float)
+    if data.ndim != 1:
+        raise ValueError(f"data must be 1-D, got shape {data.shape}.")
+    q       = np.asarray(q, dtype=float)
+    scalar  = q.ndim == 0
+    q       = np.atleast_1d(q)
+    if np.any((q < 0) | (q > 100)):
+        raise ValueError("All values of q must be in [0, 100].")
+    clean = data[~np.isnan(data)]
+    n     = len(clean)
+    if n == 0:
+        result = np.full(len(q), np.nan)
+        return float(result[0]) if scalar else result
+    sd    = np.sort(clean, kind="stable")
+    vidx  = (q / 100.0) * (n - 1)
+    lo    = np.clip(np.floor(vidx).astype(int), 0, n-1)
+    hi    = np.clip(np.ceil(vidx).astype(int),  0, n-1)
+    frac  = vidx - lo
+    if   interpolation == "lower":    result = sd[lo].astype(float)
+    elif interpolation == "higher":   result = sd[hi].astype(float)
+    elif interpolation == "nearest":  result = sd[np.where(frac < 0.5, lo, hi)].astype(float)
+    elif interpolation == "midpoint": result = (sd[lo] + sd[hi]) / 2.0
+    else:                             result = sd[lo] + frac * (sd[hi] - sd[lo])
+    return float(result[0]) if scalar else result
+
