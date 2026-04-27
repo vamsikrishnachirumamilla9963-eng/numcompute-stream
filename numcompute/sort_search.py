@@ -140,3 +140,59 @@ def topk(
     top_values  = values[top_indices]
     return (top_values, top_indices) if return_indices else top_values
 
+def quickselect(
+    values: np.ndarray,
+    k: int,
+    largest: bool = True,
+) -> float:
+    """Return the k-th order statistic using randomised quickselect.
+
+    This is an O(n) expected-time algorithm provided for educational
+    purposes. For production use prefer topk.
+
+    Parameters
+    ----------
+    values  : np.ndarray, shape (n,)
+    k       : int — 1-based rank (k=1 -> largest/smallest element)
+    largest : bool, default True
+
+    Returns
+    -------
+    float
+
+    Raises
+    ------
+    ValueError
+        If values is not 1-D or k is out of range.
+
+    """
+    values = np.asarray(values, dtype=float)
+    if values.ndim != 1:
+        raise ValueError(f"values must be 1-D, got shape {values.shape}.")
+    n = len(values)
+    if not (1 <= k <= n):
+        raise ValueError(f"k must be in [1, {n}], got {k}.")
+    arr    = values.copy()
+    target = (n - k) if largest else (k - 1)
+    return _quickselect_inplace(arr, 0, n - 1, target)
+
+
+def _quickselect_inplace(
+    arr: np.ndarray, lo: int, hi: int, target: int
+) -> float:
+    """Randomised in-place quickselect."""
+    while lo < hi:
+        pivot_idx = np.random.randint(lo, hi + 1)
+        arr[[pivot_idx, hi]] = arr[[hi, pivot_idx]]
+        pivot_val = arr[hi]
+        store = lo
+        for i in range(lo, hi):
+            if arr[i] < pivot_val:
+                arr[[store, i]] = arr[[i, store]]
+                store += 1
+        arr[[store, hi]] = arr[[hi, store]]
+        if   store == target: return float(arr[store])
+        elif store  < target: lo = store + 1
+        else:                 hi = store - 1
+    return float(arr[lo])
+

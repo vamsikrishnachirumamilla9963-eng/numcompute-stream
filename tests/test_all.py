@@ -204,3 +204,16 @@ class TestTopK:
         with pytest.raises(ValueError):
             topk(np.ones((3,3)), 2)
 
+from numcompute.sort_search import quickselect
+
+class TestQuickselect:
+    def test_largest_1st(self):
+        assert quickselect(np.array([3.,1.,4.,1.,5.]), k=1, largest=True) == 5.
+
+    def test_smallest_2nd(self):
+        assert quickselect(np.array([3.,1.,4.,1.,5.]), k=2, largest=False) == 1.
+
+    def test_out_of_range_raises(self):
+        with pytest.raises(ValueError):
+            quickselect(np.array([1.,2.]), k=5)
+
