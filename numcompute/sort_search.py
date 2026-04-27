@@ -196,3 +196,32 @@ def _quickselect_inplace(
         else:                 hi = store - 1
     return float(arr[lo])
 
+def binary_search(
+    sorted_array: np.ndarray,
+    x: float,
+) -> Tuple[int, bool]:
+    """Search for x in a sorted 1-D array.
+
+    Parameters
+    ----------
+    sorted_array : np.ndarray, shape (n,) — ascending
+    x            : float
+
+    Returns
+    -------
+    index : int   — insertion point
+    found : bool  — True if x is present
+
+    Raises
+    ------
+    ValueError
+        If sorted_array is not 1-D.
+
+    """
+    sorted_array = np.asarray(sorted_array)
+    if sorted_array.ndim != 1:
+        raise ValueError(f"sorted_array must be 1-D, got shape {sorted_array.shape}.")
+    idx   = int(np.searchsorted(sorted_array, x, side="left"))
+    found = bool(idx < len(sorted_array) and sorted_array[idx] == x)
+    return idx, found
+

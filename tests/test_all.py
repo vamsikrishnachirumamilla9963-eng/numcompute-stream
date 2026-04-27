@@ -217,3 +217,22 @@ class TestQuickselect:
         with pytest.raises(ValueError):
             quickselect(np.array([1.,2.]), k=5)
 
+from numcompute.sort_search import binary_search
+
+class TestBinarySearch:
+    def test_found(self):
+        idx, found = binary_search(np.array([1,3,5,7,9]), 5)
+        assert found and idx == 2
+
+    def test_not_found(self):
+        _, found = binary_search(np.array([1,3,5,7,9]), 4)
+        assert not found
+
+    def test_insert_at_end(self):
+        idx, found = binary_search(np.array([1,2,3]), 99)
+        assert idx == 3 and not found
+
+    def test_empty_array(self):
+        idx, found = binary_search(np.array([]), 1.)
+        assert not found and idx == 0
+
