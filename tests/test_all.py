@@ -265,5 +265,20 @@ class TestRank:
         r_max = rank(np.array([5.,5.,5.,9.]), method="max")
         assert np.allclose(r_min[:3], 1.) and np.allclose(r_max[:3], 3.)
 
+from numcompute.rank import percentile
 
+class TestPercentile:
+    def test_median(self):
+        assert percentile(np.array([1.,2.,3.,4.,5.]), 50) == 3.
+
+    def test_lower_interpolation(self):
+        assert percentile(np.array([1.,2.,3.,4.]), 50, interpolation="lower") == 2.
+
+    def test_higher_interpolation(self):
+        assert percentile(np.array([1.,2.,3.,4.]), 50, interpolation="higher") == 3.
+
+    def test_nan_ignored(self):
+        assert np.isclose(percentile(np.array([1.,np.nan,3.]), 50), 2.)
+    
+    
 
