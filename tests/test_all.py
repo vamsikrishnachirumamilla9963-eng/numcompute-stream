@@ -353,6 +353,14 @@ class TestWelford:
         data = np.array([[2.],[4.],[4.],[4.],[5.],[5.],[7.],[9.]])
         w = WelfordStats(1); w.update(data)
         assert np.isclose(w.sample_variance[0], np.var(data.ravel(), ddof=1))
+        
+    def test_empty_batch_noop(self):
+        w = WelfordStats(2); w.update(np.ones((5,2)))
+        n = w.n_; w.update(np.empty((0,2)))
+        assert w.n_ == n
 
-
+    def test_reset(self):
+        w = WelfordStats(1); w.update(np.array([[5.]]))
+        w.reset()
+        assert w.n_ == 0 and np.isnan(w.variance[0])
 
