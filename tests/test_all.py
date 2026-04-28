@@ -455,3 +455,26 @@ class TestROC:
         fpr,tpr,_ = roc_curve(np.array([1,1,1,1]), np.array([.9,.8,.7,.6]))
         assert np.isfinite(auc(fpr,tpr))
 
+from numcompute.optim import grad
+
+class TestGrad:
+    def test_central_quadratic(self):
+        g = grad(lambda x: np.sum(x**2), np.array([1.,2.,3.]))
+        assert np.allclose(g, [2.,4.,6.], atol=1e-6)
+
+    def test_forward_gradient(self):
+        g = grad(lambda x: x[0]*x[1], np.array([2.,3.]), method="forward")
+        assert np.allclose(g, [3.,2.], atol=1e-5)
+
+    def test_cubic_1d(self):
+        g = grad(lambda x: x[0]**3, np.array([2.]))
+        assert np.isclose(g[0], 12., atol=1e-5)
+
+    def test_invalid_method_raises(self):
+        with pytest.raises(ValueError):
+            grad(lambda x: x[0], np.array([1.]), method="bogus")
+
+    def test_non_1d_raises(self):
+        with pytest.raises(ValueError):
+            grad(lambda x: x.sum(), np.ones((2,2)))
+

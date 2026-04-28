@@ -1,2 +1,2 @@
-from . import io, preprocessing, sort_search, rank, stats, metrics
+from . import io, preprocessing, sort_search, rank, stats, metrics, optim
 __version__ = "0.1.0"
