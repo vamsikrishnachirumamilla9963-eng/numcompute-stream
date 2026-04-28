@@ -478,3 +478,18 @@ class TestGrad:
         with pytest.raises(ValueError):
             grad(lambda x: x.sum(), np.ones((2,2)))
 
+from numcompute.optim import jacobian
+
+class TestJacobian:
+    def test_linear_jacobian(self):
+        A = np.array([[1.,2.],[3.,4.]])
+        J = jacobian(lambda x: A@x, np.array([1.,1.]))
+        assert np.allclose(J, A, atol=1e-6)
+
+    def test_all_three_methods(self):
+        F = lambda x: np.array([x[0]**2, x[1]**2])
+        x = np.array([3.,4.])
+        for method in ("central","forward","backward"):
+            J = jacobian(F, x, method=method)
+            assert np.allclose(J, np.diag([6.,8.]), atol=1e-4)
+
