@@ -493,3 +493,16 @@ class TestJacobian:
             J = jacobian(F, x, method=method)
             assert np.allclose(J, np.diag([6.,8.]), atol=1e-4)
 
+from numcompute.utils import euclidean_distance, manhattan_distance, cosine_similarity, pairwise_euclidean
+
+class TestDistances:
+    def test_euclidean(self):
+        assert np.isclose(euclidean_distance(np.array([0.,0.]), np.array([3.,4.])), 5.)
+
+    def test_manhattan(self):
+        assert np.isclose(manhattan_distance(np.array([0.,0.]), np.array([3.,4.])), 7.)
+
+    def test_cosine_parallel(self):
+        assert np.isclose(cosine_similarity(np.array([1.,0.]), np.array([1.,0.])), 1.)
+    
+    
