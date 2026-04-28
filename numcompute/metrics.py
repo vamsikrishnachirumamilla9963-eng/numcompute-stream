@@ -128,3 +128,35 @@ def f1(y_true, y_pred, average="macro", pos_label=1) -> float:
     """F1 score. average: {'macro','micro','binary'}"""
     return _prf(y_true, y_pred, "f1", average, pos_label)
 
+def mse(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    """Mean Squared Error.
+
+    Complexity: Time O(n), Space O(1)
+    """
+    y_true = np.asarray(y_true, dtype=float)
+    y_pred = np.asarray(y_pred, dtype=float)
+    _check_labels(y_true, y_pred)
+    return float(np.mean((y_true - y_pred)**2))
+
+def mae(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    """Mean Absolute Error.
+
+    """
+    y_true = np.asarray(y_true, dtype=float)
+    y_pred = np.asarray(y_pred, dtype=float)
+    _check_labels(y_true, y_pred)
+    return float(np.mean(np.abs(y_true - y_pred)))
+
+def r2_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    """Coefficient of determination R^2.
+
+    Returns 1.0 if SS_tot=0 and SS_res=0.
+    """
+    y_true = np.asarray(y_true, dtype=float)
+    y_pred = np.asarray(y_pred, dtype=float)
+    _check_labels(y_true, y_pred)
+    ss_res = float(np.sum((y_true - y_pred)**2))
+    ss_tot = float(np.sum((y_true - np.mean(y_true))**2))
+    if ss_tot == 0.:
+        return 1. if ss_res == 0. else 0.
+    return float(1. - ss_res/ss_tot)

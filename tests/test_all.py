@@ -420,3 +420,21 @@ class TestPrecisionRecallF1:
         p = precision(y_true, y_pred, average="macro")
         assert np.isclose(p, (0.5 + 2/3)/2, atol=1e-6)
 
+from numcompute.metrics import mse, mae, r2_score
+
+class TestRegressionMetrics:
+    def test_mse_zero(self):
+        y = np.array([1.,2.,3.])
+        assert mse(y, y) == 0.
+
+    def test_mse_known(self):
+        assert np.isclose(mse(np.array([1.,2.,3.]), np.array([2.,2.,2.])), 2/3)
+
+    def test_r2_perfect(self):
+        y = np.array([1.,2.,3.])
+        assert np.isclose(r2_score(y, y), 1.)
+
+    def test_shape_mismatch_raises(self):
+        with pytest.raises(ValueError):
+            mse(np.array([1.,2.]), np.array([1.]))
+
