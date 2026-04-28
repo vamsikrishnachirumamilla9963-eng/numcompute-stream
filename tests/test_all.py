@@ -438,3 +438,20 @@ class TestRegressionMetrics:
         with pytest.raises(ValueError):
             mse(np.array([1.,2.]), np.array([1.]))
 
+from numcompute.metrics import roc_curve, auc
+
+class TestROC:
+    def test_perfect_auc(self):
+        fpr,tpr,_ = roc_curve(np.array([0,0,1,1]), np.array([.1,.2,.8,.9]))
+        assert np.isclose(auc(fpr,tpr), 1.)
+
+    def test_random_auc_near_half(self):
+        rng = np.random.default_rng(7)
+        y_true = rng.integers(0,2,200); y_score = rng.random(200)
+        fpr,tpr,_ = roc_curve(y_true, y_score)
+        assert 0.3 < auc(fpr,tpr) < 0.7
+
+    def test_all_positive_no_crash(self):
+        fpr,tpr,_ = roc_curve(np.array([1,1,1,1]), np.array([.9,.8,.7,.6]))
+        assert np.isfinite(auc(fpr,tpr))
+
