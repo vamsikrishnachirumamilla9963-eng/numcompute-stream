@@ -364,3 +364,21 @@ class TestWelford:
         w.reset()
         assert w.n_ == 0 and np.isnan(w.variance[0])
 
+from numcompute.metrics import accuracy, confusion_matrix
+
+class TestAccuracy:
+    def test_perfect(self):
+        y = np.array([0,1,2,1])
+        assert accuracy(y, y) == 1.0
+
+    def test_zero(self):
+        assert accuracy(np.array([0,0]), np.array([1,1])) == 0.0
+
+    def test_empty(self):
+        assert accuracy(np.array([]), np.array([])) == 0.0
+
+    def test_shape_mismatch_raises(self):
+        with pytest.raises(ValueError):
+            accuracy(np.array([0,1]), np.array([0]))
+    
+    
