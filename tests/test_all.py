@@ -381,4 +381,21 @@ class TestAccuracy:
         with pytest.raises(ValueError):
             accuracy(np.array([0,1]), np.array([0]))
     
-    
+class TestConfusionMatrix:
+    def test_shape(self):
+        cm, _ = confusion_matrix(np.array([0,1,2,1,0]), np.array([0,2,2,1,0]))
+        assert cm.shape == (3,3)
+
+    def test_diagonal_sum(self):
+        y = np.array([0,1,2,1,0])
+        p = np.array([0,2,2,1,0])
+        cm, _ = confusion_matrix(y, p)
+        assert cm.diagonal().sum() == 4
+
+    def test_unsorted_labels(self):
+        y_true = np.array([2,0,1,2,0])
+        y_pred = np.array([2,0,0,1,0])
+        cm, labels = confusion_matrix(y_true, y_pred, labels=np.array([2,0,1]))
+        assert cm[0,0] == 1   # true=2, pred=2
+        assert cm[1,1] == 2   # true=0, pred=0 (twice)
+
