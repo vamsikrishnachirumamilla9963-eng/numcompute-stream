@@ -160,3 +160,53 @@ def r2_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     if ss_tot == 0.:
         return 1. if ss_res == 0. else 0.
     return float(1. - ss_res/ss_tot)
+
+def roc_curve(
+    y_true: np.ndarray,
+    y_score: np.ndarray,
+    pos_label: int = 1,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """ROC curve via cumulative TP/FP counts.
+
+    Parameters
+    ----------
+    y_true   : np.ndarray, shape (n,) — binary labels
+    y_score  : np.ndarray, shape (n,) — continuous scores
+    pos_label: int, default 1
+
+    Returns
+    -------
+    fpr, tpr, thresholds : np.ndarray
+
+    """
+    y_true  = np.asarray(y_true)
+    y_score = np.asarray(y_score, dtype=float)
+    if y_true.ndim != 1:
+        raise ValueError(f"y_true must be 1-D, got shape {y_true.shape}.")
+    if y_true.shape != y_score.shape:
+        raise ValueError(f"Shape mismatch: {y_true.shape} vs {y_score.shape}.")
+    desc        = np.argsort(y_score, kind="stable")[::-1]
+    ys          = (y_true[desc] == pos_label).astype(int)
+    thresh      = y_score[desc]
+    tp_c        = np.cumsum(ys)
+    fp_c        = np.cumsum(1 - ys)
+    n_pos       = int(tp_c[-1]) if len(tp_c) else 0
+    n_neg       = int(fp_c[-1]) if len(fp_c) else 0
+    tpr         = tp_c / max(n_pos, 1)
+    fpr         = fp_c / max(n_neg, 1)
+    tpr         = np.concatenate([[0.], tpr])
+    fpr         = np.concatenate([[0.], fpr])
+    thresh      = np.concatenate([[thresh[0]+1.], thresh])
+    return fpr, tpr, thresh
+
+
+def auc(fpr: np.ndarray, tpr: np.ndarray) -> float:
+    """Area under the ROC curve via trapezoidal rule.
+
+    """
+    fpr    = np.asarray(fpr, dtype=float)
+    tpr    = np.asarray(tpr, dtype=float)
+    order  = np.argsort(fpr, kind="stable")
+    _trapz = getattr(np, "trapezoid", None) or np.trapz
+    return float(_trapz(tpr[order], fpr[order]))
+
