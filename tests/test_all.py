@@ -505,4 +505,21 @@ class TestDistances:
     def test_cosine_parallel(self):
         assert np.isclose(cosine_similarity(np.array([1.,0.]), np.array([1.,0.])), 1.)
     
-    
+    def test_cosine_zero_vector(self):
+        assert cosine_similarity(np.zeros(3), np.ones(3)) == 0.
+
+    def test_pairwise_shape(self):
+        D = pairwise_euclidean(np.random.default_rng(0).standard_normal((5,3)))
+        assert D.shape == (5,5) and np.allclose(np.diagonal(D), 0.)
+
+    def test_pairwise_non_square(self):
+        D = pairwise_euclidean(
+            np.random.default_rng(0).standard_normal((4,3)),
+            np.random.default_rng(1).standard_normal((6,3)))
+        assert D.shape == (4,6)
+
+    def test_pairwise_symmetry(self):
+        X = np.random.default_rng(1).standard_normal((4,2))
+        D = pairwise_euclidean(X)
+        assert np.allclose(D, D.T, atol=1e-10)
+
