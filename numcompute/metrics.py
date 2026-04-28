@@ -81,3 +81,50 @@ def confusion_matrix(
     np.add.at(matrix, (ti, pi), 1)
     return matrix, labels
 
+def _prf(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    metric: str,
+    average: str,
+    pos_label: int,
+) -> float:
+    """Vectorised P/R/F1: (n,1)x(1,C) broadcast — no loop over samples."""
+    valid = ("macro","micro","binary")
+    if average not in valid:
+        raise ValueError(f"average must be one of {valid}, got '{average}'.")
+    y_true, y_pred = np.asarray(y_true), np.asarray(y_pred)
+    _check_labels(y_true, y_pred)
+    classes = np.unique(np.concatenate([y_true, y_pred]))
+    if average == "binary":
+        classes = np.array([pos_label])
+    y_t = y_true[:, np.newaxis]; y_p = y_pred[:, np.newaxis]; c = classes[np.newaxis,:]
+    tp  = np.sum((y_p==c)&(y_t==c), axis=0).astype(float)
+    fp  = np.sum((y_p==c)&(y_t!=c), axis=0).astype(float)
+    fn  = np.sum((y_p!=c)&(y_t==c), axis=0).astype(float)
+    p   = np.where((tp+fp)>0, tp/(tp+fp), 0.)
+    r   = np.where((tp+fn)>0, tp/(tp+fn), 0.)
+    if average == "micro":
+        tp_s=tp.sum(); fp_s=fp.sum(); fn_s=fn.sum()
+        pm = float(tp_s/(tp_s+fp_s)) if (tp_s+fp_s)>0 else 0.
+        rm = float(tp_s/(tp_s+fn_s)) if (tp_s+fn_s)>0 else 0.
+        if metric=="precision": return pm
+        if metric=="recall":    return rm
+        d  = pm+rm; return float(2*pm*rm/d) if d>0 else 0.
+    if metric=="precision": return float(np.mean(p))
+    if metric=="recall":    return float(np.mean(r))
+    denom = p+r
+    return float(np.mean(np.where(denom>0, 2*p*r/denom, 0.)))
+
+
+def precision(y_true, y_pred, average="macro", pos_label=1) -> float:
+    """Precision score. average: {'macro','micro','binary'}"""
+    return _prf(y_true, y_pred, "precision", average, pos_label)
+
+def recall(y_true, y_pred, average="macro", pos_label=1) -> float:
+    """Recall score. average: {'macro','micro','binary'}"""
+    return _prf(y_true, y_pred, "recall", average, pos_label)
+
+def f1(y_true, y_pred, average="macro", pos_label=1) -> float:
+    """F1 score. average: {'macro','micro','binary'}"""
+    return _prf(y_true, y_pred, "f1", average, pos_label)
+

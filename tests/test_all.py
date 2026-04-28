@@ -399,3 +399,24 @@ class TestConfusionMatrix:
         assert cm[0,0] == 1   # true=2, pred=2
         assert cm[1,1] == 2   # true=0, pred=0 (twice)
 
+from numcompute.metrics import precision, recall, f1
+
+class TestPrecisionRecallF1:
+    def test_binary_precision_recall(self):
+        y_true = np.array([1,1,0,0]); y_pred = np.array([1,0,0,0])
+        assert np.isclose(precision(y_true, y_pred, average="binary"), 1.)
+        assert np.isclose(recall(y_true, y_pred, average="binary"), .5)
+
+    def test_f1_harmonic_mean(self):
+        y_true = np.array([1,1,0,0]); y_pred = np.array([1,0,0,0])
+        assert np.isclose(f1(y_true,y_pred,average="binary"), 2*1.*.5/(1.+.5))
+
+    def test_invalid_average_raises(self):
+        with pytest.raises(ValueError):
+            precision(np.array([0,1]), np.array([0,1]), average="weighted")
+
+    def test_macro_average(self):
+        y_true = np.array([0,0,1,1,1]); y_pred = np.array([0,1,1,1,0])
+        p = precision(y_true, y_pred, average="macro")
+        assert np.isclose(p, (0.5 + 2/3)/2, atol=1e-6)
+
