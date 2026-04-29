@@ -83,3 +83,18 @@ def logsumexp(
     if axis is None:
         return float(res.ravel()[0])
     return np.squeeze(res, axis=axis)
+def batch_iter(
+    X: np.ndarray,
+    batch_size: int,
+    y: Optional[np.ndarray] = None,
+    shuffle: bool = False,
+    seed: Optional[int] = None,
+) -> Iterator:
+   
+    n   = len(X)
+    idx = np.arange(n)
+    if shuffle:
+        np.random.default_rng(seed).shuffle(idx)
+    for start in range(0, n, batch_size):
+        sl = idx[start:start+batch_size]
+        yield (X[sl], y[sl]) if y is not None else X[sl]
