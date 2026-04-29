@@ -558,3 +558,23 @@ class TestLogsumexp:
 
     def test_overflow_stable(self):
         assert np.isfinite(logsumexp(np.array([1000.,1000.])))
+from numcompute.utils import batch_iter
+
+class TestBatchIter:
+    def test_sizes(self):
+        X = np.arange(10).reshape(-1,1).astype(float)
+        sizes = [len(b) for b in batch_iter(X, batch_size=3)]
+        assert sizes == [3,3,3,1]
+
+    def test_shuffle_reproducible(self):
+        X = np.arange(20).reshape(10,2).astype(float)
+        b1 = [b.copy() for b in batch_iter(X, 3, shuffle=True, seed=42)]
+        b2 = [b.copy() for b in batch_iter(X, 3, shuffle=True, seed=42)]
+        assert all(np.array_equal(a,b) for a,b in zip(b1,b2))
+
+    def test_yields_y_when_provided(self):
+        X = np.ones((6,2)); y = np.arange(6)
+        batches = list(batch_iter(X, 3, y=y))
+        assert len(batches) == 2
+        Xb, yb = batches[0]
+        assert len(Xb)==3 and len(yb)==3
