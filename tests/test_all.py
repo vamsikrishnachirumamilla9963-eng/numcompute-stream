@@ -578,3 +578,13 @@ class TestBatchIter:
         assert len(batches) == 2
         Xb, yb = batches[0]
         assert len(Xb)==3 and len(yb)==3
+from numcompute.pipeline import Transformer, Estimator
+
+class TestProtocols:
+    def test_transformer_raises_not_implemented(self):
+        with pytest.raises(NotImplementedError):
+            Transformer().fit(np.ones((3,2)))
+
+    def test_estimator_raises_not_implemented(self):
+        with pytest.raises(NotImplementedError):
+            Estimator().fit(np.ones((3,2)), np.ones(3))       
