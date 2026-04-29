@@ -624,3 +624,14 @@ class TestPipeline:
         pipe = Pipeline([("s",StandardScaler()),("e",DummyEst())])
         pipe.fit(np.ones((4,2)))
         assert len(pipe.predict(np.ones((4,2)))) == 4
+from numcompute.pipeline import FeatureUnion
+
+class TestFeatureUnion:
+    def test_output_width(self):
+        X = np.array([[1.,2.],[3.,4.],[5.,6.]])
+        Xt = FeatureUnion([("std",StandardScaler()),("mm",MinMaxScaler())]).fit_transform(X)
+        assert Xt.shape == (3,4)
+
+    def test_empty_raises(self):
+        with pytest.raises(ValueError):
+            FeatureUnion([])
