@@ -581,3 +581,46 @@ class TestProtocols:
     def test_estimator_raises_not_implemented(self):
         with pytest.raises(NotImplementedError):
             Estimator().fit(np.ones((3,2)), np.ones(3))
+
+from numcompute.pipeline import Pipeline
+from numcompute.preprocessing import StandardScaler, MinMaxScaler
+
+class TestPipeline:
+    def test_fit_transform_chain(self):
+        X = np.array([[1.,2.],[3.,4.],[5.,6.]])
+        Xt = Pipeline([("std",StandardScaler()),("mm",MinMaxScaler())]).fit_transform(X)
+        assert Xt.shape==X.shape
+        assert np.isclose(Xt.min(),0.) and np.isclose(Xt.max(),1.)
+
+    def test_getitem(self):
+        pipe = Pipeline([("std",StandardScaler())])
+        assert isinstance(pipe["std"], StandardScaler)
+
+    def test_key_error(self):
+        with pytest.raises(KeyError):
+            Pipeline([("std",StandardScaler())])["missing"]
+
+    def test_empty_raises(self):
+        with pytest.raises(ValueError):
+            Pipeline([])
+
+    def test_duplicate_names_raises(self):
+        with pytest.raises(ValueError):
+            Pipeline([("a",StandardScaler()),("a",MinMaxScaler())])
+
+    def test_transform_raises_for_estimator_last(self):
+        class DummyEst:
+            def fit(self,X,y=None): return self
+            def predict(self,X): return np.zeros(len(X))
+        pipe = Pipeline([("s",StandardScaler()),("e",DummyEst())])
+        pipe.fit(np.ones((4,2)))
+        with pytest.raises(RuntimeError):
+            pipe.transform(np.ones((4,2)))
+
+    def test_predict_through_pipeline(self):
+        class DummyEst:
+            def fit(self,X,y=None): return self
+            def predict(self,X): return np.zeros(len(X))
+        pipe = Pipeline([("s",StandardScaler()),("e",DummyEst())])
+        pipe.fit(np.ones((4,2)))
+        assert len(pipe.predict(np.ones((4,2)))) == 4
