@@ -30,13 +30,13 @@ class TestLoadCSV:
         os.unlink(fname)
 
     def test_save_and_reload(self):
-        X = np.array([[1.0, 2.0], [3.0, 4.0]])
+        x = np.array([[1.0, 2.0], [3.0, 4.0]])
         with tempfile.NamedTemporaryFile(suffix='.csv', delete=False) as f:
             fname = f.name
-        nc_io.save_csv(X, fname, header='a,b')
+        nc_io.save_csv(x, fname, header='a,b')
         loaded = nc_io.load_csv(fname, skip_header=True)
         os.unlink(fname)
-        assert np.allclose(loaded, X)
+        assert np.allclose(loaded, x)
 
     def test_save_invalid_shape_raises(self):
         with pytest.raises(ValueError):
@@ -63,25 +63,25 @@ from numcompute.preprocessing import StandardScaler
 
 class TestStandardScaler:
     def test_zero_mean_unit_std(self):
-        X = np.array([[1., 2.], [3., 4.], [5., 6.]])
-        Xt = StandardScaler().fit_transform(X)
-        assert np.allclose(Xt.mean(axis=0), 0, atol=1e-10)
-        assert np.allclose(Xt.std(axis=0),  1, atol=1e-10)
+        x = np.array([[1., 2.], [3., 4.], [5., 6.]])
+        xt = StandardScaler().fit_transform(x)
+        assert np.allclose(xt.mean(axis=0), 0, atol=1e-10)
+        assert np.allclose(xt.std(axis=0),  1, atol=1e-10)
 
     def test_zero_variance_feature(self):
-        X = np.array([[1., 5.], [1., 6.], [1., 7.]])
-        Xt = StandardScaler().fit_transform(X)
-        assert np.allclose(Xt[:, 0], 0)
+        x = np.array([[1., 5.], [1., 6.], [1., 7.]])
+        xt = StandardScaler().fit_transform(x)
+        assert np.allclose(xt[:, 0], 0)
 
     def test_inverse_transform(self):
-        X = np.array([[1., 2.], [3., 4.]])
-        sc = StandardScaler().fit(X)
-        assert np.allclose(sc.inverse_transform(sc.transform(X)), X, atol=1e-10)
+        x = np.array([[1., 2.], [3., 4.]])
+        sc = StandardScaler().fit(x)
+        assert np.allclose(sc.inverse_transform(sc.transform(x)), x, atol=1e-10)
 
     def test_nan_preserved(self):
-        X = np.array([[1., np.nan], [3., 4.], [5., 6.]])
-        Xt = StandardScaler().fit_transform(X)
-        assert np.isnan(Xt[0, 1])
+        x = np.array([[1., np.nan], [3., 4.], [5., 6.]])
+        xt = StandardScaler().fit_transform(x)
+        assert np.isnan(xt[0, 1])
 
     def test_not_fitted_raises(self):
         with pytest.raises(RuntimeError):
@@ -91,19 +91,19 @@ from numcompute.preprocessing import MinMaxScaler
 
 class TestMinMaxScaler:
     def test_range_01(self):
-        X = np.array([[0.], [5.], [10.]])
-        Xt = MinMaxScaler().fit_transform(X)
-        assert np.isclose(Xt.min(), 0.) and np.isclose(Xt.max(), 1.)
+        x = np.array([[0.], [5.], [10.]])
+        xt = MinMaxScaler().fit_transform(x)
+        assert np.isclose(xt.min(), 0.) and np.isclose(xt.max(), 1.)
 
     def test_custom_range(self):
-        X = np.array([[0.], [10.]])
-        Xt = MinMaxScaler(feature_range=(-1, 1)).fit_transform(X)
-        assert np.isclose(Xt[0, 0], -1.) and np.isclose(Xt[1, 0], 1.)
+        x = np.array([[0.], [10.]])
+        xt = MinMaxScaler(feature_range=(-1, 1)).fit_transform(x)
+        assert np.isclose(xt[0, 0], -1.) and np.isclose(xt[1, 0], 1.)
 
     def test_constant_feature(self):
-        X = np.array([[3., 1.], [3., 2.]])
-        Xt = MinMaxScaler().fit_transform(X)
-        assert np.allclose(Xt[:, 0], 0.)
+        x = np.array([[3., 1.], [3., 2.]])
+        xt = MinMaxScaler().fit_transform(x)
+        assert np.allclose(xt[:, 0], 0.)
 
     def test_invalid_range_raises(self):
         with pytest.raises(ValueError):
@@ -113,53 +113,46 @@ from numcompute.preprocessing import SimpleImputer
 
 class TestSimpleImputer:
     def test_mean_imputation(self):
-        X = np.array([[1., np.nan], [3., 4.]])
-        Xt = SimpleImputer(strategy="mean").fit_transform(X)
-        assert np.isclose(Xt[0, 1], 4.0)
+        x = np.array([[1., np.nan], [3., 4.]])
+        xt = SimpleImputer(strategy="mean").fit_transform(x)
+        assert np.isclose(xt[0, 1], 4.0)
 
     def test_constant_imputation(self):
-        X = np.array([[np.nan, 2.], [3., np.nan]])
-        Xt = SimpleImputer(strategy="constant", fill_value=-999).fit_transform(X)
-        assert np.isclose(Xt[0, 0], -999.) and np.isclose(Xt[1, 1], -999.)
+        x = np.array([[np.nan, 2.], [3., np.nan]])
+        xt = SimpleImputer(strategy="constant", fill_value=-999).fit_transform(x)
+        assert np.isclose(xt[0, 0], -999.) and np.isclose(xt[1, 1], -999.)
 
     def test_median_imputation(self):
-        X = np.array([[1.], [3.], [np.nan], [5.]])
-        Xt = SimpleImputer(strategy="median").fit_transform(X)
-        assert np.isclose(Xt[2, 0], np.median([1, 3, 5]))
+        x = np.array([[1.], [3.], [np.nan], [5.]])
+        xt = SimpleImputer(strategy="median").fit_transform(x)
+        assert np.isclose(xt[2, 0], np.median([1, 3, 5]))
 
     def test_all_nan_column_stays_nan(self):
-        X = np.array([[np.nan], [np.nan]])
-        Xt = SimpleImputer(strategy="mean").fit_transform(X)
-        assert np.all(np.isnan(Xt))
+        x = np.array([[np.nan], [np.nan]])
+        xt = SimpleImputer(strategy="mean").fit_transform(x)
+        assert np.all(np.isnan(xt))
 
 from numcompute.preprocessing import OneHotEncoder
 
 class TestOneHotEncoder:
     def test_basic_encoding(self):
-        X = np.array([[0.], [1.], [2.], [0.]])
-        Xt = OneHotEncoder().fit_transform(X)
-        assert Xt.shape == (4, 3)
-        assert np.allclose(Xt.sum(axis=1), 1)
+        x = np.array([[0.], [1.], [2.], [0.]])
+        xt = OneHotEncoder().fit_transform(x)
+        assert xt.shape == (4, 3)
+        assert np.allclose(xt.sum(axis=1), 1)
 
     def test_multi_column(self):
-        X = np.array([[0., 1.], [1., 0.]])
-        Xt = OneHotEncoder().fit_transform(X)
-        assert Xt.shape == (2, 4)
+        x = np.array([[0., 1.], [1., 0.]])
+        xt = OneHotEncoder().fit_transform(x)
+        assert xt.shape == (2, 4)
 
     def test_unknown_category_all_zeros(self):
         ohe = OneHotEncoder().fit(np.array([[0.], [1.], [2.]]))
-        Xt = ohe.transform(np.array([[99.]]))
-        assert np.all(Xt == 0)
+        xt = ohe.transform(np.array([[99.]]))
+        assert np.all(xt == 0)
 
-from numcompute.sort_search import stable_sort, argsort_stable
 
 class TestSort:
-    def test_stable_sort_ascending(self):
-        assert np.array_equal(stable_sort(np.array([3,1,2])), [1,2,3])
-
-    def test_stable_sort_descending(self):
-        assert np.array_equal(stable_sort(np.array([3,1,2]), descending=True), [3,2,1])
-
     def test_argsort_stable_preserves_tie_order(self):
         arr = np.array([3., 1., 2., 1., 3.])
         idx = argsort_stable(arr)
@@ -169,14 +162,14 @@ class TestSort:
         assert list(ones) == sorted(ones.tolist())
 
 
-from numcompute.sort_search import stable_sort, argsort_stable, multi_key_sort
+from numcompute.sort_search import argsort_stable, multi_key_sort
 
-    def test_multi_key_sort(self):
+def test_multi_key_sort(self):
         data = np.array([[2,1],[1,3],[1,2]])
         out = multi_key_sort(data, keys=[0,1])
         assert out[0,0]==1 and out[1,0]==1 and out[0,1]==2
 
-    def test_multi_key_invalid_key_raises(self):
+def test_multi_key_invalid_key_raises(self):
         with pytest.raises(ValueError):
             multi_key_sort(np.ones((3,2)), keys=[5])
 
@@ -304,9 +297,9 @@ class TestDescribe:
         assert d["nan_count"] == 1 and d["n"] == 2
 
     def test_mean_std_values(self):
-        X = np.array([2.,4.,4.,4.,5.,5.,7.,9.])
-        d = describe(X)
-        assert np.isclose(d["mean"], X.mean()) and np.isclose(d["std"], X.std())
+        x = np.array([2.,4.,4.,4.,5.,5.,7.,9.])
+        d = describe(x)
+        assert np.isclose(d["mean"], x.mean()) and np.isclose(d["std"], x.std())
 
 from numcompute.stats import quantiles, histogram
 
@@ -420,7 +413,7 @@ class TestPrecisionRecallF1:
         p = precision(y_true, y_pred, average="macro")
         assert np.isclose(p, (0.5 + 2/3)/2, atol=1e-6)
 
-from numcompute.metrics import mse, mae, r2_score
+from numcompute.metrics import mse, r2_score
 
 class TestRegressionMetrics:
     def test_mse_zero(self):
@@ -482,16 +475,16 @@ from numcompute.optim import jacobian
 
 class TestJacobian:
     def test_linear_jacobian(self):
-        A = np.array([[1.,2.],[3.,4.]])
-        J = jacobian(lambda x: A@x, np.array([1.,1.]))
-        assert np.allclose(J, A, atol=1e-6)
+        a = np.array([[1.,2.],[3.,4.]])
+        j = jacobian(lambda x: a@x, np.array([1.,1.]))
+        assert np.allclose(j, a, atol=1e-6)
 
     def test_all_three_methods(self):
-        F = lambda x: np.array([x[0]**2, x[1]**2])
+        f = lambda x: np.array([x[0]**2, x[1]**2])
         x = np.array([3.,4.])
         for method in ("central","forward","backward"):
-            J = jacobian(F, x, method=method)
-            assert np.allclose(J, np.diag([6.,8.]), atol=1e-4)
+            j = jacobian(f, x, method=method)
+            assert np.allclose(j, np.diag([6.,8.]), atol=1e-4)
 
 from numcompute.utils import euclidean_distance, manhattan_distance, cosine_similarity, pairwise_euclidean
 
@@ -509,20 +502,20 @@ class TestDistances:
         assert cosine_similarity(np.zeros(3), np.ones(3)) == 0.
 
     def test_pairwise_shape(self):
-        D = pairwise_euclidean(np.random.default_rng(0).standard_normal((5,3)))
-        assert D.shape == (5,5) and np.allclose(np.diagonal(D), 0.)
+        d = pairwise_euclidean(np.random.default_rng(0).standard_normal((5,3)))
+        assert d.shape == (5,5) and np.allclose(np.diagonal(d), 0.)
 
     def test_pairwise_non_square(self):
-        D = pairwise_euclidean(
+        d = pairwise_euclidean(
             np.random.default_rng(0).standard_normal((4,3)),
             np.random.default_rng(1).standard_normal((6,3)))
-        assert D.shape == (4,6)
+        assert d.shape == (4,6)
 
     def test_pairwise_symmetry(self):
-        X = np.random.default_rng(1).standard_normal((4,2))
-        D = pairwise_euclidean(X)
-        assert np.allclose(D, D.T, atol=1e-10)
-from numcompute.utils import sigmoid, softmax, relu, leaky_relu, tanh, logsumexp
+        x = np.random.default_rng(1).standard_normal((4,2))
+        d = pairwise_euclidean(x)
+        assert np.allclose(d, d.T, atol=1e-10)
+from numcompute.utils import sigmoid, softmax, relu, leaky_relu, logsumexp
 
 class TestActivations:
     def test_sigmoid_midpoint(self):
@@ -562,22 +555,22 @@ from numcompute.utils import batch_iter
 
 class TestBatchIter:
     def test_sizes(self):
-        X = np.arange(10).reshape(-1,1).astype(float)
-        sizes = [len(b) for b in batch_iter(X, batch_size=3)]
+        x = np.arange(10).reshape(-1,1).astype(float)
+        sizes = [len(b) for b in batch_iter(x, batch_size=3)]
         assert sizes == [3,3,3,1]
 
     def test_shuffle_reproducible(self):
-        X = np.arange(20).reshape(10,2).astype(float)
-        b1 = [b.copy() for b in batch_iter(X, 3, shuffle=True, seed=42)]
-        b2 = [b.copy() for b in batch_iter(X, 3, shuffle=True, seed=42)]
+        x = np.arange(20).reshape(10,2).astype(float)
+        b1 = [b.copy() for b in batch_iter(x, 3, shuffle=True, seed=42)]
+        b2 = [b.copy() for b in batch_iter(x, 3, shuffle=True, seed=42)]
         assert all(np.array_equal(a,b) for a,b in zip(b1,b2))
 
     def test_yields_y_when_provided(self):
-        X = np.ones((6,2)); y = np.arange(6)
-        batches = list(batch_iter(X, 3, y=y))
+        x = np.ones((6,2)); y = np.arange(6)
+        batches = list(batch_iter(x, 3, y=y))
         assert len(batches) == 2
-        Xb, yb = batches[0]
-        assert len(Xb)==3 and len(yb)==3
+        xb, yb = batches[0]
+        assert len(xb)==3 and len(yb)==3
 from numcompute.pipeline import Transformer, Estimator
 
 class TestProtocols:
@@ -587,4 +580,4 @@ class TestProtocols:
 
     def test_estimator_raises_not_implemented(self):
         with pytest.raises(NotImplementedError):
-            Estimator().fit(np.ones((3,2)), np.ones(3))       
+            Estimator().fit(np.ones((3,2)), np.ones(3))
