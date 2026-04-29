@@ -522,4 +522,39 @@ class TestDistances:
         X = np.random.default_rng(1).standard_normal((4,2))
         D = pairwise_euclidean(X)
         assert np.allclose(D, D.T, atol=1e-10)
+from numcompute.utils import sigmoid, softmax, relu, leaky_relu, tanh, logsumexp
 
+class TestActivations:
+    def test_sigmoid_midpoint(self):
+        assert np.isclose(sigmoid(np.array([0.]))[0], 0.5)
+
+    def test_sigmoid_large_positive_stable(self):
+        assert np.isclose(sigmoid(np.array([1000.]))[0], 1.)
+
+    def test_sigmoid_large_negative_stable(self):
+        assert np.isclose(sigmoid(np.array([-1000.]))[0], 0.)
+
+    def test_softmax_sums_to_one(self):
+        assert np.isclose(softmax(np.array([1.,2.,3.])).sum(), 1.)
+
+    def test_softmax_overflow_stable(self):
+        s = softmax(np.array([1000.,1001.,1002.]))
+        assert np.all(np.isfinite(s)) and np.isclose(s.sum(), 1.)
+
+    def test_relu(self):
+        out = relu(np.array([-2., 0., 3.]))
+        assert np.allclose(out, [0., 0., 3.])
+
+    def test_leaky_relu(self):
+        out = leaky_relu(np.array([-2., 0., 3.]), alpha=0.1)
+        assert np.isclose(out[0], -0.2) and out[1]==0. and out[2]==3.
+
+class TestLogsumexp:
+    def test_correctness(self):
+        import math
+        x = np.array([1.,2.,3.])
+        expected = math.log(math.exp(1)+math.exp(2)+math.exp(3))
+        assert np.isclose(logsumexp(x), expected)
+
+    def test_overflow_stable(self):
+        assert np.isfinite(logsumexp(np.array([1000.,1000.])))
