@@ -635,3 +635,24 @@ class TestFeatureUnion:
     def test_empty_raises(self):
         with pytest.raises(ValueError):
             FeatureUnion([])
+
+from numcompute.benchmarking import timeit, compare, speedup
+
+class TestBenchmarking:
+    def test_timeit_returns_stats(self):
+        s = timeit(np.sum, np.ones(1000), n_runs=5, warmup=1)
+        assert "mean_s" in s and s["mean_s"] > 0
+
+    def test_compare_keys(self):
+        arr = np.ones(1000)
+        res = compare({"a":np.sum,"b":np.mean}, args=(arr,), n_runs=3)
+        assert set(res.keys()) == {"a","b"}
+
+    def test_speedup_missing_baseline_raises(self):
+        with pytest.raises(KeyError):
+            speedup({"a":{"mean_s":1.}}, "missing")
+
+    def test_numpy_faster_than_loop(self):
+        arr = np.random.default_rng(0).standard_normal(100_000)
+        res = compare({"loop":lambda a:sum(a.tolist()),"np":np.sum}, args=(arr,), n_runs=5)
+        assert speedup(res,"loop")["np"] > 5
