@@ -135,12 +135,9 @@ Benchmarked on Python 3.12 / NumPy 2.4 — array size **500,000 float64** elemen
 
 | Operation | Loop (ms) | NumPy (ms) | Speedup |
 |-----------|----------:|----------:|--------:|
-| Sum       | 33.1      | 0.25      | **131×** |
-| Mean      | 30.8      | 0.22      | **143×** |
-| Std       | 111.1     | 0.85      | **131×** |
-| Top-10    | 144.5     | 1.32      | **110×** |
-
-Welford streaming (n=10,000): 54 ms vs np.std 0.018 ms — Welford trades speed for O(1) memory use.
+| Sum       | 16.9      | 0.06      | **277.7×** |
+| Mean      | 15.5      | 0.09      | **177.5×** |
+| Std       | 56.7     | 0.47      | **120.8×** |
 
 ---
 
@@ -195,7 +192,7 @@ NumCompute/
 ## Design Notes
 
 **Vectorisation:** All core computations use NumPy broadcasting and ufuncs.
-Python loops appear only in `quickselect` (educational illustration) and `WelfordStats.update` (streaming semantics require sequential updates, though batch mode is supported).
+Python loops appear only in `quickselect`.
 
 **Numerical stability:**
 - `softmax` uses max-shifting to prevent overflow
