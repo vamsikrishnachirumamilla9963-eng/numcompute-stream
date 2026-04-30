@@ -59,7 +59,6 @@ class TestLoadCSVChunks:
         os.unlink(fname)
         assert data.shape == (2, 3)
 
-from numcompute.preprocessing import StandardScaler
 
 class TestStandardScaler:
     def test_zero_mean_unit_std(self):
@@ -87,7 +86,6 @@ class TestStandardScaler:
         with pytest.raises(RuntimeError):
             StandardScaler().transform(np.array([[1., 2.]]))
 
-from numcompute.preprocessing import MinMaxScaler
 
 class TestMinMaxScaler:
     def test_range_01(self):
@@ -164,14 +162,16 @@ class TestSort:
 
 from numcompute.sort_search import argsort_stable, multi_key_sort
 
-def test_multi_key_sort(self):
-        data = np.array([[2,1],[1,3],[1,2]])
-        out = multi_key_sort(data, keys=[0,1])
-        assert out[0,0]==1 and out[1,0]==1 and out[0,1]==2
+def test_multi_key_sort():
+    data = np.array([[2, 1], [1, 3], [1, 2]])
+    out = multi_key_sort(data, keys=[0, 1])
+    assert out[0, 0] == 1
+    assert out[1, 0] == 1
+    assert out[0, 1] == 2
 
-def test_multi_key_invalid_key_raises(self):
-        with pytest.raises(ValueError):
-            multi_key_sort(np.ones((3,2)), keys=[5])
+def test_multi_key_invalid_key_raises():
+    with pytest.raises(ValueError):
+        multi_key_sort(np.ones((3, 2)), keys=[5])
 
 from numcompute.sort_search import topk
 
@@ -284,7 +284,7 @@ class TestPercentile:
         ps = percentile(np.array([1.,2.,3.,4.,5.]), [0,50,100])
         assert isinstance(ps, np.ndarray) and ps[0]==1. and ps[2]==5.
 
-from numcompute.stats import describe, mean, std, median
+from numcompute.stats import describe
 
 class TestDescribe:
     def test_keys_present(self):
