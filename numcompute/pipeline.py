@@ -44,6 +44,32 @@ class Pipeline:
             last.fit(x_cur, y)
         self._fitted = True
         return self
+    def partial_fit(self, x: np.ndarray, y: Optional[np.ndarray] = None) -> "Pipeline":
+        """Incrementally fit transformers and final estimator on one data chunk."""
+        x_cur = x
+
+        for _, step in self.steps[:-1]:
+            if hasattr(step, "partial_fit"):
+                step.partial_fit(x_cur, y)
+            elif hasattr(step, "fit"):
+                step.fit(x_cur, y)
+
+            if hasattr(step, "transform"):
+                x_cur = step.transform(x_cur)
+            else:
+                raise TypeError("Intermediate pipeline steps must implement transform().")
+
+        _, last = self.steps[-1]
+
+        if hasattr(last, "partial_fit"):
+            last.partial_fit(x_cur, y)
+        elif hasattr(last, "fit"):
+            last.fit(x_cur, y)
+        else:
+            raise TypeError("Final pipeline step must implement fit() or partial_fit().")
+
+        self._fitted = True
+        return self
 
     def transform(self, x: np.ndarray) -> np.ndarray:
         last = self.steps[-1][1]
