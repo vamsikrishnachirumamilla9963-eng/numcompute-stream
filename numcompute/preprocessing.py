@@ -60,6 +60,36 @@ class StandardScaler(_BaseTransformer):
         self.scale_ = np.where(self.scale_ == 0, 1.0, self.scale_)
         self._fitted = True
         return self
+    def partial_fit(self, X: np.ndarray, y=None) -> "StandardScaler":
+        """Update running mean and variance from a new chunk."""
+        X = self._validate(X)
+
+        chunk_count = X.shape[0]
+        chunk_mean = np.nanmean(X, axis=0)
+        chunk_var = np.nanvar(X, axis=0)
+
+        if not hasattr(self, "n_seen_"):
+            self.n_seen_ = 0
+            self.mean_ = np.zeros(X.shape[1])
+            self.var_ = np.zeros(X.shape[1])
+
+        total_count = self.n_seen_ + chunk_count
+        delta = chunk_mean - self.mean_
+
+        new_mean = self.mean_ + delta * (chunk_count / total_count)
+        new_var = (
+            (self.n_seen_ * self.var_)
+            + (chunk_count * chunk_var)
+            + (delta ** 2) * self.n_seen_ * chunk_count / total_count
+        ) / total_count
+
+        self.n_seen_ = total_count
+        self.mean_ = new_mean
+        self.var_ = new_var
+        self.scale_ = np.sqrt(self.var_)
+        self.scale_ = np.where(self.scale_ == 0, 1.0, self.scale_)
+        self._fitted = True
+        return self
 
     def transform(self, X: np.ndarray) -> np.ndarray:
         """Apply z-score standardisation.
@@ -122,6 +152,28 @@ class MinMaxScaler(_BaseTransformer):
         lo, hi = self.feature_range
         self.scale_ = (hi - lo) / data_range
         self.min_   = lo - self.data_min_ * self.scale_
+        self._fitted = True
+        return self
+    def partial_fit(self, X: np.ndarray, y=None) -> "MinMaxScaler":
+        """Update running min/max from a new chunk."""
+        X = self._validate(X)
+
+        chunk_min = np.nanmin(X, axis=0)
+        chunk_max = np.nanmax(X, axis=0)
+
+        if not hasattr(self, "data_min_"):
+            self.data_min_ = chunk_min
+            self.data_max_ = chunk_max
+        else:
+            self.data_min_ = np.minimum(self.data_min_, chunk_min)
+            self.data_max_ = np.maximum(self.data_max_, chunk_max)
+
+        data_range = self.data_max_ - self.data_min_
+        data_range = np.where(data_range == 0, 1.0, data_range)
+
+        lo, hi = self.feature_range
+        self.scale_ = (hi - lo) / data_range
+        self.min_ = lo - self.data_min_ * self.scale_
         self._fitted = True
         return self
 
@@ -187,6 +239,35 @@ class SimpleImputer(_BaseTransformer):
                 self.statistics_ = np.full(X.shape[1], self.fill_value)
         self._fitted = True
         return self
+    def partial_fit(self, X: np.ndarray, y=None) -> "SimpleImputer":
+        """Update imputation statistics from a new chunk."""
+        X = self._validate(X)
+
+        if self.strategy == "constant":
+            self.statistics_ = np.full(X.shape[1], self.fill_value)
+            self._fitted = True
+            return self
+
+        if not hasattr(self, "_stored_values"):
+            self._stored_values = [[] for _ in range(X.shape[1])]
+
+        for j in range(X.shape[1]):
+            clean = X[:, j][~np.isnan(X[:, j])]
+            if clean.size > 0:
+                self._stored_values[j].extend(clean.tolist())
+
+        stats = []
+        for values in self._stored_values:
+            if len(values) == 0:
+                stats.append(np.nan)
+            elif self.strategy == "mean":
+                stats.append(float(np.mean(values)))
+            else:
+                stats.append(float(np.median(values)))
+
+        self.statistics_ = np.asarray(stats)
+        self._fitted = True
+        return self
 
     def transform(self, X: np.ndarray) -> np.ndarray:
         """Replace NaN values with fitted statistics.
@@ -231,6 +312,24 @@ class OneHotEncoder(_BaseTransformer):
             np.unique(X[:, j][~np.isnan(X[:, j])])
             for j in range(X.shape[1])
         ]
+        self._fitted = True
+        return self
+    def partial_fit(self, X: np.ndarray, y=None) -> "OneHotEncoder":
+        """Update learned categories from a new chunk."""
+        X = self._validate(X)
+
+        if not hasattr(self, "categories_"):
+            self.categories_ = [
+                np.unique(X[:, j][~np.isnan(X[:, j])])
+                for j in range(X.shape[1])
+            ]
+        else:
+            for j in range(X.shape[1]):
+                new_cats = np.unique(X[:, j][~np.isnan(X[:, j])])
+                self.categories_[j] = np.unique(
+                    np.concatenate([self.categories_[j], new_cats])
+                )
+
         self._fitted = True
         return self
 
