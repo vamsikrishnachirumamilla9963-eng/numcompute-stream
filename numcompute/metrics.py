@@ -210,3 +210,101 @@ def auc(fpr: np.ndarray, tpr: np.ndarray) -> float:
     _trapz = getattr(np, "trapezoid", None) or np.trapz
     return float(_trapz(tpr[order], fpr[order]))
 
+
+
+# Streaming Metrics
+
+
+class StreamingAccuracy:
+    """Streaming accuracy metric with update/reset/result API."""
+
+    def __init__(self):
+        self.reset()
+
+    def update(self, y_true, y_pred):
+        y_true = np.asarray(y_true)
+        y_pred = np.asarray(y_pred)
+        _check_labels(y_true, y_pred)
+
+        self.correct_ += int(np.sum(y_true == y_pred))
+        self.total_ += int(len(y_true))
+        return self
+
+    def result(self):
+        return 0.0 if self.total_ == 0 else float(self.correct_ / self.total_)
+
+    def reset(self):
+        self.correct_ = 0
+        self.total_ = 0
+        return self
+
+
+class StreamingClassificationMetrics:
+    """
+    Streaming classification metrics.
+
+    Maintains accumulated y_true and y_pred values so accuracy, precision,
+    recall, f1, and confusion matrix can be computed over all seen chunks.
+    """
+
+    def __init__(self, average="macro", pos_label=1, rolling_window=None):
+        self.average = average
+        self.pos_label = pos_label
+        self.rolling_window = rolling_window
+        self.reset()
+
+    def update(self, y_true, y_pred):
+        y_true = np.asarray(y_true)
+        y_pred = np.asarray(y_pred)
+        _check_labels(y_true, y_pred)
+
+        self.y_true_ = np.concatenate([self.y_true_, y_true])
+        self.y_pred_ = np.concatenate([self.y_pred_, y_pred])
+
+        if self.rolling_window is not None and len(self.y_true_) > self.rolling_window:
+            self.y_true_ = self.y_true_[-self.rolling_window:]
+            self.y_pred_ = self.y_pred_[-self.rolling_window:]
+
+        return self
+
+    def result(self):
+        if len(self.y_true_) == 0:
+            return {
+                "accuracy": 0.0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "f1": 0.0,
+                "confusion_matrix": np.zeros((0, 0), dtype=int),
+                "labels": np.array([]),
+            }
+
+        cm, labels = confusion_matrix(self.y_true_, self.y_pred_)
+
+        return {
+            "accuracy": accuracy(self.y_true_, self.y_pred_),
+            "precision": precision(
+                self.y_true_,
+                self.y_pred_,
+                average=self.average,
+                pos_label=self.pos_label,
+            ),
+            "recall": recall(
+                self.y_true_,
+                self.y_pred_,
+                average=self.average,
+                pos_label=self.pos_label,
+            ),
+            "f1": f1(
+                self.y_true_,
+                self.y_pred_,
+                average=self.average,
+                pos_label=self.pos_label,
+            ),
+            "confusion_matrix": cm,
+            "labels": labels,
+        }
+
+    def reset(self):
+        self.y_true_ = np.array([])
+        self.y_pred_ = np.array([])
+        return self
