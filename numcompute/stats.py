@@ -174,3 +174,75 @@ class WelfordStats:
         self.M2_   = np.zeros(self.n_features, dtype=float)
         return self
     
+
+
+# Streaming Statistics
+
+
+class StreamingStats:
+    """Chunk-based streaming statistics for NumCompute."""
+
+    def __init__(self, n_features: int | None = None, bins: int = 10):
+        self.n_features = n_features
+        self.bins = bins
+        self.reset()
+
+    def update_stats(self, X_chunk: np.ndarray) -> "StreamingStats":
+        """Update running statistics from one data chunk."""
+        X = np.asarray(X_chunk, dtype=float)
+
+        if X.ndim == 1:
+            X = X.reshape(-1, 1)
+
+        if X.ndim != 2:
+            raise ValueError(f"X_chunk must be 2-D, got shape {X.shape}")
+
+        if self.n_features is None:
+            self.n_features = X.shape[1]
+            self.welford_ = WelfordStats(self.n_features)
+        elif X.shape[1] != self.n_features:
+            raise ValueError("X_chunk feature count does not match previous chunks.")
+
+        clean = np.where(np.isnan(X), np.nan, X)
+
+        self.welford_.update(np.nan_to_num(clean, nan=0.0))
+        self.values_.append(X.copy())
+        self.n_chunks_ += 1
+
+        return self
+
+    def result(self):
+        """Return current streaming statistics."""
+        if self.n_chunks_ == 0:
+            return {
+                "mean": np.array([]),
+                "variance": np.array([]),
+                "std": np.array([]),
+                "quantiles": np.array([]),
+                "histogram": (np.array([]), np.array([])),
+                "n_chunks": 0,
+            }
+
+        all_values = np.vstack(self.values_)
+
+        return {
+            "mean": np.nanmean(all_values, axis=0),
+            "variance": np.nanvar(all_values, axis=0),
+            "std": np.nanstd(all_values, axis=0),
+            "quantiles": np.nanpercentile(all_values, [25, 50, 75], axis=0),
+            "histogram": np.histogram(all_values[~np.isnan(all_values)], bins=self.bins),
+            "n_chunks": self.n_chunks_,
+        }
+
+    def reset(self):
+        self.values_ = []
+        self.n_chunks_ = 0
+        self.welford_ = WelfordStats(self.n_features or 1)
+        return self
+
+
+def update_stats(X_chunk: np.ndarray, state: StreamingStats | None = None) -> StreamingStats:
+    """Functional helper to update streaming statistics state."""
+    if state is None:
+        state = StreamingStats()
+    return state.update_stats(X_chunk)
