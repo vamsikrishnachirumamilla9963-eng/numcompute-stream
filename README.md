@@ -1,3 +1,4 @@
+# NumCompute – Assignment 2.1 & 2.2
 # ASSIGNMENT2.1
 The Repository is for the Assignment 2.1 for our team.
 
@@ -202,3 +203,250 @@ Python loops appear only in `quickselect`.
 - All statistics use `np.nan*` variants for robust NaN handling
 
 **API consistency:** All transformers share `fit / transform / fit_transform`; shapes are documented; `axis` semantics follow NumPy conventions.
+
+
+
+# Assignment 2.2 – Streaming Machine Learning Framework
+
+## Overview
+
+Assignment 2.2 extends the NumCompute toolkit with streaming machine learning capabilities. The framework now supports incremental preprocessing, chunk-based model training, streaming evaluation metrics, logging, benchmarking, and visualisation.
+
+The goal of this extension is to allow machine learning workflows to operate on data arriving in small batches rather than requiring the entire dataset to be loaded at once.
+
+---
+
+## Features Implemented
+
+### Streaming Models
+
+#### DecisionTreeClassifier
+
+* Supports fit()
+* Supports partial_fit()
+* Gini and Entropy splitting criteria
+* Configurable tree depth
+* Feature subsampling support
+
+#### EnsembleClassifier
+
+* Multiple Decision Trees
+* Bootstrap sampling
+* Majority voting
+* Incremental learning using partial_fit()
+
+---
+
+### Streaming Training
+
+#### StreamTrainer
+
+Provides:
+
+* Chunk-based training
+* Chunk accuracy tracking
+* Cumulative accuracy tracking
+* Memory usage monitoring
+* Training logs
+
+---
+
+### Streaming Metrics
+
+Implemented:
+
+* StreamingAccuracy
+* StreamingClassificationMetrics
+
+Supports:
+
+* Accuracy
+* Precision
+* Recall
+* F1-score
+* Rolling-window evaluation
+* Confusion matrix tracking
+
+---
+
+### Streaming Statistics
+
+Implemented:
+
+* WelfordStats
+* StreamingStats
+* update_stats()
+
+Supports:
+
+* Running mean
+* Running variance
+* Standard deviation
+* Quantiles
+* Histograms
+* Chunk-based updates
+
+---
+
+### Incremental Preprocessing
+
+Extended preprocessing components:
+
+* StandardScaler
+* MinMaxScaler
+* SimpleImputer
+* OneHotEncoder
+
+All support incremental updates through partial_fit().
+
+---
+
+### Pipeline Support
+
+The Pipeline class now supports:
+
+* fit()
+* transform()
+* predict()
+* partial_fit()
+
+allowing preprocessing and model training to operate together in a streaming environment.
+
+---
+
+### Visualisation
+
+Implemented visualisation utilities:
+
+* plot_metric_over_time()
+* compare_models()
+* plot_predictions_vs_ground_truth()
+
+These functions assist with monitoring streaming performance and comparing models.
+
+---
+
+## Usage Instructions
+
+### Install the Package
+
+```bash
+pip install -e .
+```
+
+### Run Unit Tests
+
+```bash
+python -m pytest tests/ -v
+```
+
+Expected result:
+
+```text
+141 passed
+```
+
+### Run Benchmarks
+
+```bash
+python benchmark/benchmark.py
+```
+
+Benchmarks include:
+
+* Python loops vs NumPy vectorisation
+* Streaming Decision Tree vs Ensemble comparison
+
+### Run the Streaming Demonstration
+
+Open:
+
+```text
+demo/stream_demo.ipynb
+```
+
+The notebook demonstrates:
+
+* CSV loading
+* Chunk generation
+* Incremental preprocessing
+* Streaming model training
+* StreamTrainer logging
+* Visualisation of results
+
+---
+
+## Project Structure
+
+```text
+NumCompute/
+├── numcompute/
+│   ├── tree.py
+│   ├── ensemble.py
+│   ├── stream.py
+│   ├── visualise.py
+│   ├── preprocessing.py
+│   ├── stats.py
+│   ├── metrics.py
+│   ├── pipeline.py
+│   ├── io.py
+│   └── utils.py
+│
+├── demo/
+│   ├── quickstart.ipynb
+│   ├── stream_demo.ipynb
+│   └── sample.csv
+│
+├── benchmark/
+│   └── benchmark.py
+│
+├── tests/
+│   ├── test_all.py
+│   └── test_streaming_components.py
+│
+├── README.md
+└── pyproject.toml
+```
+
+---
+
+## Testing
+
+The framework was validated using automated unit tests covering both Assignment 2.1 and Assignment 2.2 functionality.
+
+Test coverage includes:
+
+* Decision Tree
+* Ensemble Classifier
+* StreamTrainer
+* Streaming Metrics
+* Streaming Statistics
+* Incremental Preprocessing
+* Pipeline Integration
+* Visualisation Utilities
+
+Final Results:
+
+```text
+141 passed
+0 failed
+```
+
+---
+
+## Benchmark Results
+
+Example benchmark results:
+
+| Benchmark                  | Result                 |
+| -------------------------- | ---------------------- |
+| Sum of Squares             | 44.9× NumPy speedup    |
+| Mean                       | 80.7× NumPy speedup    |
+| Top-K                      | 43.2× NumPy speedup    |
+| Streaming Tree vs Ensemble | Ensemble ≈ 3.2× slower |
+
+---
+
+## Conclusion
+
+The Assignment 2.2 extension successfully adds streaming machine learning functionality to NumCompute while maintaining a consistent API and modular design. The framework supports incremental preprocessing, model training, evaluation, benchmarking, testing, and visualisation for streaming data applications.
