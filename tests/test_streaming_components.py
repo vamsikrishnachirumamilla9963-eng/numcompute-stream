@@ -158,3 +158,15 @@ def test_streaming_stats_class():
     ss.update_stats(np.array([[1.0], [2.0], [3.0]]))
     result = ss.result()
     assert np.isclose(result["mean"][0], 2.0)
+def test_visualise_compare_models_runs():
+    from numcompute.visualise import compare_models
+
+    fig, ax = compare_models(
+        [0.8, 0.9, 1.0],
+        [0.7, 0.85, 0.95],
+        labels=("Tree", "Ensemble"),
+        show=False,
+    )
+
+    assert fig is not None
+    assert ax is not None
